@@ -1,50 +1,46 @@
-# Welcome to your Expo app 👋
+# Автор: Женин Алексей, ФИТ-2-24 НМ
+## Инструкции по установке
+- Приложение сделано на основе react-native и expo. Для установки следовать инструкциям из официальной документации
+- Приложение на SDK 52
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+## Реализация
+- Первичная инициализация происходит в app/index.tsx
+- Загрузка карты и маркеров, обработка нажатий на карте, текущего местоположения и уведомлений в components/Map.tsx
+- Обработка списка изображений при добавлении изображений для маркера в components/ImageList.tsx
+- Обработка экрана информации о конкретном маркере в app/marker/[id].tsx
+- Инициализация и контекст базы данных в contexts/DatabaseContext.tsx
+- Схема базы данных в database/schema.ts
 ```
+PRAGMA foreign_keys = ON;
+CREATE TABLE IF NOT EXISTS markers (
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   latitude REAL NOT NULL,
+   longitude REAL NOT NULL,
+   description TEXT,
+   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+                
+CREATE TABLE IF NOT EXISTS marker_images (
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   marker_id INTEGER NOT NULL,
+   uri TEXT NOT NULL,
+   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+   FOREIGN KEY (marker_id) REFERENCES markers (id) ON DELETE CASCADE
+);
+```
+- Операции с БД в database/operations.ts
+- Типы описаны в types.ts
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Инструкция по тестированию
+- Запуск приложения через npx expo start
+- Нажать на кнопку в правом нижнем углу для центрирования карты на текущем местоположении
+- Получить уведомления, если в зоне имеются уведомления
+- Нажать на кнопку симуляции (выше кнопки центрирования) для симуляции движения
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Про тестирование
+- При приближении к нескольким маркерам сразу, выводится одно уведомление со списком всех маркеров в радиусе
+- Если о некоторых маркерах уже было уведомление в прошлую минуту (меняется в notifications.ts), то они не вносятся в список маркеров в уведомлении
+- Если в радиусе имеется несколько "посещенных" маркеров и несколько "непосещенных", то в уведомлении выведутся только "непосещенные"
+- При повторном приближении (когда маркер выходит из зоны, а потом снова входит) уведомление не срабатывает
+- Фоновый режим не работает
+- Тестирование при отключении служб геолокации не проводилось
